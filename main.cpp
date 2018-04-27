@@ -21,27 +21,56 @@ int main() {
 
         while (!f.fail()) {
 
+            std::string s = "";
             char c;
             f.get(c);
 
-            std::cout << "got char " << c << std::endl;
+            if (c==' ' || c=='\n' || c=='\t' || c=='\v')
+                continue;
 
-            std::string s = "";
-            s.push_back(c);
+            else if (isNumber(c)) {
+                s.push_back(c);
+                while (isNumber((char)f.peek()))
+                    s.push_back((char)f.get());
 
-            std::cout << "string " << s << std::endl;
-
-            if (isLetter(c)) {
-
-                while (isLetter(f.peek()))
-                    s.push_back(f.get());
-
-            } else {
                 v.push_back(s);
             }
+            else if (c == '\'') {
+                s.push_back(c);
+
+                if (f.peek() != '\'') {
+                    s.push_back((char)f.get());
+
+                    if (f.peek() == '\'') {
+                        s.push_back((char)f.get());
+                        v.push_back(s);
+                    }
+                    else
+                        printf("Error Char token - expected ending quote but received %c", f.get());
+                }
+                else
+                    printf("Error Char token - expected non-quote but received %c", f.get());
+            }
+            else if (c == '\"') {
+                s.push_back(c);
+
+                while (f.peek() != '\"')
+                    s.push_back((char)f.get());
+
+                if (f.peek() != '\"')
+                    printf("Error String token - no closing quotes");
+                else {
+                    s.push_back((char)f.get());
+                    v.push_back(s);
+                }
+            }
+
+
         }
 
-        for (int i = 0; i < v.size(); ++i) {
+
+
+        for (unsigned long i=0; i < v.size(); i++) {
             std::cout << v.at(i) << std::endl;
         }
     }
