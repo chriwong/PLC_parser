@@ -12,7 +12,8 @@ int main() {
 
     std::vector<std::string> v;
 
-    std::ifstream f("C:\\Users\\Christian\\UF Classes\\COP4020\\project\\project\\sample.txt");
+//    std::ifstream f("C:\\Users\\Christian\\UF Classes\\COP4020\\project\\project\\sample.txt");
+    std::ifstream f("sample2.txt");
 
     if (!f.is_open()) {
         std::cout << "Error opening file" << std::endl;
@@ -25,10 +26,11 @@ int main() {
             char c;
             f.get(c);
 
+            // Skip whitespace
             if (c==' ' || c=='\n' || c=='\t' || c=='\v')
                 continue;
 
-                // Numbers are any consecutive digits
+            // Numbers are any consecutive digits
             else if (isNumber(c)) {
                 s.push_back(c);
                 while (isNumber((char)f.peek()))
@@ -36,7 +38,8 @@ int main() {
 
                 v.push_back(s);
             }
-                // Chars are single quote -> char -> single quote
+
+            // Chars are single quote -> char -> single quote
             else if (c == '\'') {
                 s.push_back(c);
 
@@ -53,7 +56,8 @@ int main() {
                 else
                     printf("Error Char token - expected non-quote but received %c", f.get());
             }
-                // Strings are double quote -> any number of any other characters -> double quote
+
+            // Strings are double quote -> any number of any other characters -> double quote
             else if (c == '\"') {
                 s.push_back(c);
 
@@ -67,7 +71,8 @@ int main() {
                     v.push_back(s);
                 }
             }
-                // : := :=:
+
+            // Colon
             else if (c == ':') {
                 s.push_back(c);
 
@@ -80,7 +85,8 @@ int main() {
                 }
                 v.push_back(s);
             }
-                // < <= <>
+
+            // Less than
             else if (c == '<') {
                 s.push_back(c);
 
@@ -89,7 +95,8 @@ int main() {
 
                 v.push_back(s);
             }
-                // > >=
+
+            // Greater than
             else if (c == '>') {
                 s.push_back(c);
 
@@ -98,7 +105,8 @@ int main() {
 
                 v.push_back(s);
             }
-                // . ..
+
+            // Dot
             else if (c == '.') {
                 s.push_back(c);
 
@@ -107,13 +115,14 @@ int main() {
 
                 v.push_back(s);
             }
-                // + - / * = , ; () {}
+
+            // Single Symbols + - * / = , ; () {}
             else if (isSingleSymbol(c)) {
                 s.push_back(c);
                 v.push_back(s);
             }
 
-            //identifiers
+            // Identifiers
             if (isLetter(c) || c=='_') {
                 s.push_back(c);
 
