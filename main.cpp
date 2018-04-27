@@ -5,7 +5,7 @@
 
 bool isLetter(const char &c);
 bool isNumber(const char &c);
-bool isValidSymbol(const char &c);
+bool isSingleSymbol(const char &c);
 bool isIdentifierChar(const char &c);
 
 int main() {
@@ -64,6 +64,48 @@ int main() {
                     v.push_back(s);
                 }
             }
+            else if (c == ':') {
+                s.push_back(c);
+
+                if (f.peek() == '=') {
+                    s.push_back((char)f.get());
+
+                    if (f.peek() == ':') {
+                        s.push_back((char)f.get());
+                    }
+                }
+                v.push_back(s);
+            }
+            else if (c == '<') {
+                s.push_back(c);
+
+                if (f.peek() == '=' || f.peek() == '>')
+                    s.push_back((char)f.get());
+
+                v.push_back(s);
+            }
+            else if (c == '>') {
+                s.push_back(c);
+
+                if (f.peek() == '=')
+                    s.push_back((char)f.get());
+
+                v.push_back(s);
+            }
+            else if (c == '.') {
+                s.push_back(c);
+
+                if (f.peek() == '.')
+                    s.push_back((char)f.get());
+
+                v.push_back(s);
+            }
+            else if (isSingleSymbol(c)) {
+                s.push_back(c);
+                v.push_back(s);
+            }
+
+            //identifiers
 
 
         }
@@ -88,8 +130,8 @@ bool isNumber(const char &c) {
     return (c>47 && c<58);
 }
 
-bool isValidSymbol(const char &c) {
-    return (c>57 && c<63) || ();
+bool isSingleSymbol(const char &c) {
+    return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c=='{'||c=='}'||c==';');
 }
 
 bool isIdentifierChar(const char &c) {
