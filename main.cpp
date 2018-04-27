@@ -28,6 +28,7 @@ int main() {
             if (c==' ' || c=='\n' || c=='\t' || c=='\v')
                 continue;
 
+                // Numbers are any consecutive digits
             else if (isNumber(c)) {
                 s.push_back(c);
                 while (isNumber((char)f.peek()))
@@ -35,6 +36,7 @@ int main() {
 
                 v.push_back(s);
             }
+                // Chars are single quote -> char -> single quote
             else if (c == '\'') {
                 s.push_back(c);
 
@@ -51,6 +53,7 @@ int main() {
                 else
                     printf("Error Char token - expected non-quote but received %c", f.get());
             }
+                // Strings are double quote -> any number of any other characters -> double quote
             else if (c == '\"') {
                 s.push_back(c);
 
@@ -64,6 +67,7 @@ int main() {
                     v.push_back(s);
                 }
             }
+                // : := :=:
             else if (c == ':') {
                 s.push_back(c);
 
@@ -76,6 +80,7 @@ int main() {
                 }
                 v.push_back(s);
             }
+                // < <= <>
             else if (c == '<') {
                 s.push_back(c);
 
@@ -84,6 +89,7 @@ int main() {
 
                 v.push_back(s);
             }
+                // > >=
             else if (c == '>') {
                 s.push_back(c);
 
@@ -92,6 +98,7 @@ int main() {
 
                 v.push_back(s);
             }
+                // . ..
             else if (c == '.') {
                 s.push_back(c);
 
@@ -100,13 +107,21 @@ int main() {
 
                 v.push_back(s);
             }
+                // + - / * = , ; () {}
             else if (isSingleSymbol(c)) {
                 s.push_back(c);
                 v.push_back(s);
             }
 
             //identifiers
+            if (isLetter(c) || c=='_') {
+                s.push_back(c);
 
+                while (isIdentifierChar((char)f.peek()))
+                    s.push_back((char)f.get());
+
+                v.push_back(s);
+            }
 
         }
 
@@ -130,8 +145,9 @@ bool isNumber(const char &c) {
     return (c>47 && c<58);
 }
 
+// + - * / = , ; () {}
 bool isSingleSymbol(const char &c) {
-    return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c=='{'||c=='}'||c==';');
+    return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c=='{'||c=='}'||c==';'||c=='=');
 }
 
 bool isIdentifierChar(const char &c) {
