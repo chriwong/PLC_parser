@@ -8,17 +8,7 @@ bool isNumber(const char &);
 bool isSingleSymbol(const char &);
 bool isIdentifierChar(const char &);
 bool isValidIdentifier(std::string);
-
-void printTree(int depth, Node *n) {
-    if (n) {
-        int x = n->childCount();
-        for (int i = 0; i < depth; ++i)
-            std::cout << ". ";
-        std::cout << n->token << "(" << x << ")" << std::endl;
-        printTree(depth+1, n->left);
-        printTree(depth+1, n->right);
-    }
-}
+bool isValidChar(std::string);
 
 struct Node {
     std::string token;
@@ -262,18 +252,33 @@ void Parser::Tiny() {
 }
 
 void Parser::Consts() {
-    read_token("const");
-    Const();
-    while (v.at(vi) == ",") {
-        read_token(",");
+    if (v.at(vi) == "const") {
+        int n = 1;
+        read_token("const");
         Const();
+        while (v.at(vi) == ",") {
+            read_token(",");
+            Const();
+            n++;
+        }
+        read_token(";");
+        build_tree("consts", n);
     }
-    read_token(";");
+    else {
+        build_tree("consts", 0);
+    }
 }
 
-void Parser::Const() {}
+void Parser::Const() {
+    Name();
+    read_token("=");
+    ConstValue();
+    build_tree("const", 2);
+}
 
-void Parser::ConstValue() {}
+void Parser::ConstValue() {
+
+}
 
 void Parser::Types() {}
 
@@ -359,9 +364,12 @@ int main(int argc, char const* argv[]) {
 
             parser.tokenize(argv[2]);
 
-            parser.parse();
+            for (unsigned long i=0; i<parser.v.size(); i++)
+                std::cout << parser.v.at(i) << std::endl;
 
-            printTree(0, parser.root);
+//            parser.parse();
+//
+//            printTree(0, parser.root);
 
         }
         else {
@@ -400,4 +408,32 @@ bool isValidIdentifier(std::string s) {
     }
     else
         return false;
+}
+
+bool isValidChar(std::string s) {
+    if (s.length()>2) {
+
+        if (s.at(0) == '\'') {
+
+            if (s.at(1) != '\'') {
+
+                if (s.at(2) == '\'')
+                    return true;
+            }
+            else return false;
+        }
+        else return false;
+    }
+    else return false;
+}
+
+void printTree(int depth, Node *n) {
+    if (n) {
+        int x = n->childCount();
+        for (int i = 0; i < depth; ++i)
+            std::cout << ". ";
+        std::cout << n->token << "(" << x << ")" << std::endl;
+        printTree(depth+1, n->left);
+        printTree(depth+1, n->right);
+    }
 }
