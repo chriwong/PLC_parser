@@ -3,10 +3,22 @@
 #include <fstream>
 #include <vector>
 
-bool isLetter(const char &c);
-bool isNumber(const char &c);
-bool isSingleSymbol(const char &c);
-bool isIdentifierChar(const char &c);
+bool isLetter(const char &);
+bool isNumber(const char &);
+bool isSingleSymbol(const char &);
+bool isIdentifierChar(const char &);
+bool isValidIdentifier(std::string);
+
+void printTree(int depth, Node *n) {
+    if (n) {
+        int x = n->childCount();
+        for (int i = 0; i < depth; ++i)
+            std::cout << ". ";
+        std::cout << n->token << "(" << x << ")" << std::endl;
+        printTree(depth+1, n->left);
+        printTree(depth+1, n->right);
+    }
+}
 
 struct Node {
     std::string token;
@@ -27,41 +39,46 @@ int Node::childCount() {
 }
 
 
-struct AST {
-    Node* root;
-
-    AST() {root=nullptr;}
-
-    void printTree(int, Node*);
-
-};
-void AST::printTree(int depth, Node *n) {
-    if (n) {
-        int x = n->childCount();
-        for (int i = 0; i < depth; ++i)
-            std::cout << ". ";
-        std::cout << n->token << "(" << x << ")" << std::endl;
-        printTree(depth+1, n->left);
-        printTree(depth+1, n->right);
-    }
-}
-
-
 struct Parser {
     std::vector<std::string> v;
     unsigned long vi;
     std::stack<Node*> stack;
-    AST *tree;
+    Node *root;
 
-    Parser() {vi = 0; tree = nullptr;}
+    Parser() {vi = 0; root=nullptr;}
 
     void tokenize(const char*);
-    void parse();
     void build_tree(std::string, int);
     bool read_token(std::string);
+    void Tiny();
+    void Consts();
+    void Const();
+    void ConstValue();
+    void Types();
+    void Type();
+    void LitList();
+    void SubProgs();
+    void Fcn();
+    void Params();
+    void Dclns();
+    void Body();
+    void Statement();
+    void OutExp();
+    void StringNode();
+    void Caseclauses();
+    void Caseclause();
+    void CaseExpression();
+    void OtherwiseClause();
+    void Assignment();
+    void ForStat();
+    void ForExp();
+    void Expression();
+    void Term();
+    void Factor();
+    void Primary();
+    void Name();
+    void parse();
 };
-
-
 
 void Parser::tokenize(const char* filepath) {
 
@@ -197,54 +214,160 @@ void Parser::tokenize(const char* filepath) {
     }
 }
 
-void Parser::parse() {
-
-}
-
 void Parser::build_tree(std::string s, int n) {
     Node *p = nullptr;
     for (int i=0; i<n; i++) {
         Node *t = stack.top();
+        stack.pop();
         t->right = p;
         p = t;
     }
-    stack.push(p);
+    stack.push(new Node(s, p, nullptr));
 }
 
+/* Has to have a special, generic case for identifiers... */
 bool Parser::read_token(std::string s) {
-    if (v.at(vi) != s) {
-        return false;
-    }
-    else {
+    if (s == "<identifier>") {
         vi++;
         return true;
     }
+    else {
+        if (v.at(vi) != s) {
+            return false;
+        } else {
+            vi++;
+            return true;
+        }
+    }
     // return v.at(vi++) == s
 }
+
+void Parser::Tiny() {
+    if (v.at(vi) == "program") {
+        read_token("program");
+        Name();
+        read_token(":");
+        Consts();
+        Types();
+        Dclns();
+        SubProgs();
+        Body();
+        Name();
+        read_token(".");
+        build_tree("program", 7);
+    }
+    else {
+        std::cout << "Error in Tiny()" << std::endl;
+    }
+}
+
+void Parser::Consts() {
+    read_token("const");
+    Const();
+    while (v.at(vi) == ",") {
+        read_token(",");
+        Const();
+    }
+    read_token(";");
+}
+
+void Parser::Const() {}
+
+void Parser::ConstValue() {}
+
+void Parser::Types() {}
+
+void Parser::Type() {}
+
+void Parser::LitList() {
+    read_token("(");
+    Name();
+    while (v.at(vi) == ",") {
+        read_token(",");
+        Name();
+    }
+    read_token(")");
+}
+
+void Parser::SubProgs() {}
+
+void Parser::Fcn() {}
+
+void Parser::Params() {}
+
+void Parser::Dclns() {}
+
+void Parser::Body() {}
+
+void Parser::Statement() {}
+
+void Parser::OutExp() {}
+
+void Parser::StringNode() {}
+
+void Parser::Caseclauses() {}
+
+void Parser::Caseclause() {}
+
+void Parser::CaseExpression() {}
+
+void Parser::OtherwiseClause() {}
+
+void Parser::Assignment() {}
+
+void Parser::ForStat() {}
+
+void Parser::ForExp() {}
+
+void Parser::Expression() {}
+
+void Parser::Term() {}
+
+void Parser::Factor() {}
+
+void Parser::Primary() {}
+
+void Parser::Name() {
+    if (isValidIdentifier(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        read_token("<identifier>");
+        build_tree("<identifier>", 1);
+    }
+    else {
+        std::cout << "Error in Name()" << std::endl;
+    }
+}
+
+void Parser::parse() {
+    Tiny();
+    root = stack.top();
+
+}
+
+
+
+
 
 
 int main(int argc, char const* argv[]) {
     Parser parser;
 
-    if (argc<2){}
-    else {
+    if (argc>1) {
         std::string flagSwitch = argv[1];
 
         if (flagSwitch == "-ast") {
 
             parser.tokenize(argv[2]);
 
-//            for (unsigned long i=0; i<parser.v.size(); i++) {
-//                std::cout << parser.v.at(i) << std::endl;
-//            }
-            //...
+            parser.parse();
+
+            printTree(0, parser.root);
 
         }
         else {
             printf("Error, switch not recognized");
         }
     }
-
     return 0;
 }
 
@@ -258,11 +381,23 @@ bool isNumber(const char &c) {
     return (c>47 && c<58);
 }
 
-// + - * / = , ; () {}
+// + - * / = , ; ()
 bool isSingleSymbol(const char &c) {
     return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c==';'||c=='=');
 }
 
 bool isIdentifierChar(const char &c) {
     return isLetter(c) || isNumber(c) || c=='_';
+}
+
+bool isValidIdentifier(std::string s) {
+    if (isLetter(s.at(0)) || s.at(0) == '_') {
+        for (unsigned long i=1; i<s.length(); i++) {
+            if (!isIdentifierChar(s.at(i)))
+                return false;
+        }
+        return true;
+    }
+    else
+        return false;
 }
