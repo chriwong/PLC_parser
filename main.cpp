@@ -8,18 +8,70 @@ bool isNumber(const char &c);
 bool isSingleSymbol(const char &c);
 bool isIdentifierChar(const char &c);
 
-int main() {
+struct Node {
+    std::string token;
+    Node *left, *right;
 
+    Node(std::string s, Node *l, Node *r) : token(s), left(l), right(r) {}
+
+    int childCount();
+};
+int Node::childCount() {
+    int n = 0;
+    Node *p = left;
+    while (p) {
+        p = p->right;
+        n++;
+    }
+    return n;
+}
+
+
+struct AST {
+    Node* root;
+
+    AST() {root=nullptr;}
+
+    void printTree(int, Node*);
+
+};
+void AST::printTree(int depth, Node *n) {
+    if (n) {
+        int x = n->childCount();
+        for (int i = 0; i < depth; ++i)
+            std::cout << ". ";
+        std::cout << n->token << "(" << x << ")" << std::endl;
+        printTree(depth+1, n->left);
+        printTree(depth+1, n->right);
+    }
+}
+
+
+struct Parser {
     std::vector<std::string> v;
+    unsigned long vi;
+    std::stack<Node*> stack;
+    AST *tree;
 
-//    std::ifstream f("C:\\Users\\Christian\\UF Classes\\COP4020\\project\\project\\sample.txt");
-    std::ifstream f("sample2.txt");
+    Parser() {vi = 0; tree = nullptr;}
+
+    void tokenize(const char*);
+    void parse();
+    void build_tree(std::string, int);
+    bool read_token(std::string);
+};
+
+
+
+void Parser::tokenize(const char* filepath) {
+
+    std::ifstream f(filepath);
 
     if (!f.is_open()) {
         std::cout << "Error opening file" << std::endl;
+        exit(-1);
     }
     else {
-
         while (!f.fail()) {
 
             std::string s = "";
@@ -30,7 +82,7 @@ int main() {
             if (c==' ' || c=='\n' || c=='\t' || c=='\v')
                 continue;
 
-            // Numbers are any consecutive digits
+                // Numbers are any consecutive digits
             else if (isNumber(c)) {
                 s.push_back(c);
                 while (isNumber((char)f.peek()))
@@ -39,7 +91,7 @@ int main() {
                 v.push_back(s);
             }
 
-            // Chars are single quote -> char -> single quote
+                // Chars are single quote -> char -> single quote
             else if (c == '\'') {
                 s.push_back(c);
 
@@ -57,7 +109,7 @@ int main() {
                     printf("Error Char token - expected non-quote but received %c", f.get());
             }
 
-            // Strings are double quote -> any number of any other characters -> double quote
+                // Strings are double quote -> any number of any other characters -> double quote
             else if (c == '\"') {
                 s.push_back(c);
 
@@ -72,7 +124,7 @@ int main() {
                 }
             }
 
-            // Colon
+                // Colon
             else if (c == ':') {
                 s.push_back(c);
 
@@ -86,7 +138,7 @@ int main() {
                 v.push_back(s);
             }
 
-            // Less than
+                // Less than
             else if (c == '<') {
                 s.push_back(c);
 
@@ -96,7 +148,7 @@ int main() {
                 v.push_back(s);
             }
 
-            // Greater than
+                // Greater than
             else if (c == '>') {
                 s.push_back(c);
 
@@ -106,7 +158,7 @@ int main() {
                 v.push_back(s);
             }
 
-            // Dot
+                // Dot
             else if (c == '.') {
                 s.push_back(c);
 
@@ -116,14 +168,24 @@ int main() {
                 v.push_back(s);
             }
 
-            // Single Symbols + - * / = , ; () {}
+                // Single Symbols + - * / = , ; ()
             else if (isSingleSymbol(c)) {
                 s.push_back(c);
                 v.push_back(s);
             }
 
-            // Identifiers
-            if (isLetter(c) || c=='_') {
+                // Comments
+            else if (c == '{') {
+                while ((char)f.peek() != '}')
+                    f.get();
+            }
+            else if (c == '#') {
+                while ((char)f.peek() != '\n')
+                    f.get();
+            }
+
+                // Identifiers
+            else if (isLetter(c) || c=='_') {
                 s.push_back(c);
 
                 while (isIdentifierChar((char)f.peek()))
@@ -131,13 +193,55 @@ int main() {
 
                 v.push_back(s);
             }
+        }
+    }
+}
+
+void Parser::parse() {
+
+}
+
+void Parser::build_tree(std::string s, int n) {
+    Node *p = nullptr;
+    for (int i=0; i<n; i++) {
+        Node *t = stack.top();
+        t->right = p;
+        p = t;
+    }
+    stack.push(p);
+}
+
+bool Parser::read_token(std::string s) {
+    if (v.at(vi) != s) {
+        return false;
+    }
+    else {
+        vi++;
+        return true;
+    }
+    // return v.at(vi++) == s
+}
+
+
+int main(int argc, char const* argv[]) {
+    Parser parser;
+
+    if (argc<2){}
+    else {
+        std::string flagSwitch = argv[1];
+
+        if (flagSwitch == "-ast") {
+
+            parser.tokenize(argv[2]);
+
+//            for (unsigned long i=0; i<parser.v.size(); i++) {
+//                std::cout << parser.v.at(i) << std::endl;
+//            }
+            //...
 
         }
-
-
-
-        for (unsigned long i=0; i < v.size(); i++) {
-            std::cout << v.at(i) << std::endl;
+        else {
+            printf("Error, switch not recognized");
         }
     }
 
@@ -156,7 +260,7 @@ bool isNumber(const char &c) {
 
 // + - * / = , ; () {}
 bool isSingleSymbol(const char &c) {
-    return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c=='{'||c=='}'||c==';'||c=='=');
+    return (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'||c==','||c==';'||c=='=');
 }
 
 bool isIdentifierChar(const char &c) {

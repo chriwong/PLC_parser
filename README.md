@@ -21,7 +21,11 @@
   * . ..
 * Other symbols
   * Plus, minus, star, forward-slash, semicolon, comma, open/close parentheses, and open/close braces are all valid
-  * + - * / ; , ( { ) }
+  * + - * / ; , ( )
+* Comments
+  * Braces and all text between them should be ignored. An octothorpes and all text on the same line following it should also be ignored
+  * \{.*\}
+  * #
 * Identifiers
   * A valid identifier begins with a letter underscore and is followed by any number of letters, numbers, or underscores
   * regex ([A-Z]|[a-z]|_)([a-z]|[A-Z]|[0-9]|_)*
