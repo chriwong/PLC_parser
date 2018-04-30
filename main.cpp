@@ -9,6 +9,7 @@ bool isSingleSymbol(const char &);
 bool isIdentifierChar(const char &);
 bool isValidIdentifier(std::string);
 bool isValidChar(std::string);
+bool isValidString(std::string);
 
 struct Node {
     std::string token;
@@ -276,13 +277,23 @@ void Parser::Const() {
     build_tree("const", 2);
 }
 
-void Parser::ConstValue() {
+void Parser::ConstValue() {}
 
+void Parser::Types() {
+    if (v.at(vi) == "type") {
+        
+    }
+    else {
+        build_tree("types", 0);
+    }
 }
 
-void Parser::Types() {}
-
-void Parser::Type() {}
+void Parser::Type() {
+    Name();
+    read_token("=");
+    LitList();
+    build_tree("type", 2);
+}
 
 void Parser::LitList() {
     read_token("(");
@@ -421,6 +432,24 @@ bool isValidChar(std::string s) {
                     return true;
             }
             else return false;
+        }
+        else return false;
+    }
+    else return false;
+}
+
+bool isValidString(std::string s) {
+    if (s.length() > 2) {
+
+        if (s.at(0) == '\"') {
+
+            for (int i=0; i<s.length()-1; i++) {
+                if (s.at(i) == '\"')
+                    return false;
+            }
+
+            if (s.at(s.length()-1) == '\"')
+                return true;
         }
         else return false;
     }
