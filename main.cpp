@@ -10,6 +10,7 @@ bool isIdentifierChar(const char &);
 bool isValidIdentifier(std::string);
 bool isValidChar(std::string);
 bool isValidString(std::string);
+bool isValidInteger(std::string);
 
 struct Node {
     std::string token;
@@ -411,6 +412,7 @@ void Parser::Body() {
     build_tree("block", n);
 }
 
+//TODO null case and distinguish between Assignment() and Body()
 void Parser::Statement() {
     if (v.at(vi) == "output") {
         read_token("output");
@@ -515,9 +517,26 @@ void Parser::Statement() {
     }
 }
 
-void Parser::OutExp() {}
+void Parser::OutExp() {
+    if (isValidString(v.at(vi))) {
+        StringNode();
+        build_tree("string", 1);
+    }
+    else {
+        Expression();
+        build_tree("integer", 1);
+    }
+}
 
-void Parser::StringNode() {}
+void Parser::StringNode() {
+    if (isValidString(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        read_token("<identifier>");
+    }
+    else {
+        std::cout << "Error in StringNode()" << std::endl;
+    }
+}
 
 void Parser::Caseclauses() {}
 
@@ -527,19 +546,178 @@ void Parser::CaseExpression() {}
 
 void Parser::OtherwiseClause() {}
 
-void Parser::Assignment() {}
+void Parser::Assignment() {
+    Name();
+    if (v.at(vi) == ":=") {
+        Expression();
+        build_tree("assign", 2);
+    }
+    else if (v.at(vi) == ":=:") {
+        Name();
+        build_tree("swap", 2);
+    }
+    else {
+        std::cout << "Error in Assignment()" << std::endl;
+    }
+}
 
 void Parser::ForStat() {}
 
 void Parser::ForExp() {}
 
-void Parser::Expression() {}
+void Parser::Expression() {
+    Term();
+    if (v.at(vi) == "<=") {
+        read_token("<=");
+        Term();
+        build_tree("<=", 2);
+    }
+    else if (v.at(vi) == "<") {
+        read_token("<");
+        Term();
+        build_tree("<", 2);
+    }
+    else if (v.at(vi) == ">=") {
+        read_token(">=");
+        Term();
+        build_tree(">=", 2);
+    }
+    else if (v.at(vi) == ">") {
+        read_token(">");
+        Term();
+        build_tree(">", 2);
+    }
+    else if (v.at(vi) == "=") {
+        read_token("=");
+        Term();
+        build_tree("=", 2);
+    }
+    else if (v.at(vi) == "<>") {
+        read_token("<>");
+        Term();
+        build_tree("<>", 2);
+    }
+}
 
-void Parser::Term() {}
+void Parser::Term() {
+    Factor();
+    while (v.at(vi) == "+") {
+        read_token("+");
+        Factor();
+        build_tree("+", 2);
+    }
+    while (v.at(vi) == "-") {
+        read_token("-");
+        Factor();
+        build_tree("-", 2);
+    }
+    while (v.at(vi) == "or") {
+        read_token("or");
+        Factor();
+        build_tree("or", 2);
+    }
+}
 
-void Parser::Factor() {}
+void Parser::Factor() {
+    Primary();
+    while (v.at(vi) == "*") {
+        read_token("*");
+        Primary();
+        build_tree("*", 2);
+    }
+    while (v.at(vi) == "/") {
+        read_token("/");
+        Primary();
+        build_tree("/", 2);
+    }
+    while (v.at(vi) == "and") {
+        read_token("and");
+        Primary();
+        build_tree("and", 2);
+    }
+    while (v.at(vi) == "mod") {
+        read_token("mod");
+        Primary();
+        build_tree("mod", 2);
+    }
+}
 
-void Parser::Primary() {}
+void Parser::Primary() {
+    if (v.at(vi) == "-") {
+        read_token("-");
+        Primary();
+        build_tree("-", 1);
+    }
+    else if (v.at(vi) == "+") {
+        read_token("+");
+        Primary();
+        build_tree("+", 1);
+    }
+    else if (v.at(vi) == "not") {
+        read_token("not");
+        Primary();
+        build_tree("not", 1);
+    }
+    else if (v.at(vi) == "eof") {
+        read_token("eof");
+        build_tree("eof", 0);
+    }
+    else if (v.at(vi) == "(") {
+        read_token("(");
+        Expression();
+        read_token(")");
+    }
+    else if (v.at(vi) == "succ") {
+        read_token("succ");
+        read_token("(");
+        Expression();
+        read_token(")");
+        build_tree("succ", 1);
+    }
+    else if (v.at(vi) == "pred") {
+        read_token("pred");
+        Expression();
+        build_tree("pred", 1);
+    }
+    else if (v.at(vi) == "chr") {
+        read_token("chr");
+        Expression();
+        build_tree("chr", 1);
+    }
+    else if (v.at(vi) == "ord") {
+        read_token("ord");
+        Expression();
+        build_tree("ord", 1);
+    }
+    else if (isValidChar(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        build_tree("<char>", 1);
+        read_token("<identifier>");
+    }
+    else if (isValidInteger(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        build_tree("<integer>", 1);
+        read_token("<identifier>");
+    }
+    else if (isValidIdentifier(v.at(vi))) {
+        Name();
+        if (v.at(vi) == "(") {
+            read_token("(");
+            int n = 1;
+            Expression();
+            while (v.at(vi) == ",") {
+                read_token(",");
+                Expression();
+                n++;
+            }
+            read_token(")");
+            build_tree("call", n);
+        }
+    }
+    else {
+        std::cout << "Error in Primary()" << std::endl;
+    }
+}
 
 void Parser::Name() {
     if (isValidIdentifier(v.at(vi))) {
@@ -652,6 +830,14 @@ bool isValidString(std::string s) {
         else return false;
     }
     else return false;
+}
+
+bool isValidInteger(std::string s) {
+    for (int i=0; i<s.length(); i++) {
+        if (s.at(i) < '0' || s.at(i) > '9')
+            return false;
+    }
+    return true;
 }
 
 void printTree(int depth, Node *n) {
