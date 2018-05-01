@@ -3,16 +3,6 @@
 #include <fstream>
 #include <vector>
 
-bool isLetter(const char &);
-bool isNumber(const char &);
-bool isSingleSymbol(const char &);
-bool isIdentifierChar(const char &);
-bool isValidIdentifier(std::string);
-bool isValidChar(std::string);
-bool isValidString(std::string);
-bool isValidInteger(std::string);
-bool isKeyword(std::string);
-
 struct Node {
     std::string token;
     Node *left, *right;
@@ -31,6 +21,25 @@ int Node::childCount() {
     return n;
 }
 
+bool isLetter(const char &);
+bool isNumber(const char &);
+bool isSingleSymbol(const char &);
+bool isIdentifierChar(const char &);
+bool isValidIdentifier(std::string);
+bool isValidChar(std::string);
+bool isValidString(std::string);
+bool isValidInteger(std::string);
+bool isKeyword(std::string);
+void printTree(int depth, Node *n) {
+    if (n) {
+        int x = n->childCount();
+        for (int i = 0; i < depth; ++i)
+            std::cout << ". ";
+        std::cout << n->token << "(" << x << ")" << std::endl;
+        printTree(depth+1, n->left);
+        printTree(depth+1, n->right);
+    }
+}
 
 struct Parser {
     std::vector<std::string> v;
@@ -222,17 +231,19 @@ void Parser::build_tree(std::string s, int n) {
 /* Has to have a special, generic case for identifiers... */
 bool Parser::read_token(std::string s) {
     if (s == "<identifier>") {
+        std::cout << "Read <identifier>: " << v.at(vi) << std::endl;
+        std::cout << " vi : " << vi << std::endl;
         vi++;
         return true;
     }
     else {
         if (v.at(vi) != s) {
-            std::cout << "Error reading " << s << std::endl;
+            std::cout << "Error reading " << s << " at vi: " << vi << std::endl;
             return false;
         } else {
-            vi++;
             std::cout << "Correctly read " << s << std::endl;
             std::cout << " vi : " << vi << std::endl;
+            vi++;
             return true;
         }
     }
@@ -397,7 +408,7 @@ void Parser::Dclns() {
             Dcln();
             read_token(";");
             n++;
-        } while (v.at(vi) != "function" || v.at(vi) != "begin");
+        } while (v.at(vi) != "function" && v.at(vi) != "begin");
         build_tree("dclns", n);
     }
     else {
@@ -799,8 +810,6 @@ void Parser::parse() {
 
 
 
-
-
 int main(int argc, char const* argv[]) {
     Parser parser;
 
@@ -811,11 +820,14 @@ int main(int argc, char const* argv[]) {
 
             parser.tokenize(argv[2]);
 
-            for (unsigned long i=0; i<parser.v.size(); i++)
-                std::cout << parser.v.at(i) << std::endl;
+            std::ofstream ot("output.txt");
 
-//            parser.parse();
-//
+            for (unsigned long i=0; i<parser.v.size(); i++)
+                ot << parser.v.at(i) << "\n";
+            ot.close();
+
+            parser.parse();
+
 //            printTree(0, parser.root);
 
         }
@@ -936,15 +948,4 @@ bool isKeyword(std::string s) {
             s == "pred" ||
             s == "chr" ||
             s == "ord");
-}
-
-void printTree(int depth, Node *n) {
-    if (n) {
-        int x = n->childCount();
-        for (int i = 0; i < depth; ++i)
-            std::cout << ". ";
-        std::cout << n->token << "(" << x << ")" << std::endl;
-        printTree(depth+1, n->left);
-        printTree(depth+1, n->right);
-    }
 }
