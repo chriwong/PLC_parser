@@ -11,6 +11,7 @@ bool isValidIdentifier(std::string);
 bool isValidChar(std::string);
 bool isValidString(std::string);
 bool isValidInteger(std::string);
+bool isKeyword(std::string);
 
 struct Node {
     std::string token;
@@ -58,8 +59,8 @@ struct Parser {
     void Statement();
     void OutExp();
     void StringNode();
-    void Caseclauses();
-    void Caseclause();
+    void CaseClauses();
+    void CaseClause();
     void CaseExpression();
     void OtherwiseClause();
     void Assignment();
@@ -282,7 +283,24 @@ void Parser::Const() {
     build_tree("const", 2);
 }
 
-void Parser::ConstValue() {}
+void Parser::ConstValue() {
+    if (isValidInteger(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        read_token("<identifier>");
+        build_tree("<integer>", 1);
+    }
+    else if (isValidChar(v.at(vi))) {
+        build_tree(v.at(vi), 0);
+        read_token("<identifier>");
+        build_tree("<char>", 1);
+    }
+    else if (isValidIdentifier(v.at(vi))) {
+        Name();
+    }
+    else {
+        std::cout << "Error in ConstValue()" << std::endl;
+    }
+}
 
 /*
  * I don't know how to code the regex + operator (one or more occurences)
@@ -370,6 +388,7 @@ void Parser::Params() {
     build_tree("params", n);
 }
 
+//TODO change while condition (to what?)
 void Parser::Dclns() {
     if (v.at(vi) == "var") {
         int n = 0;
@@ -488,7 +507,7 @@ void Parser::Statement() {
         read_token("case");
         Expression();
         read_token("of");
-        Caseclauses();
+        CaseClauses();
         OtherwiseClause();
         read_token("end");
         build_tree("case", 3);
@@ -538,13 +557,44 @@ void Parser::StringNode() {
     }
 }
 
-void Parser::Caseclauses() {}
+void Parser::CaseClauses() {
+    CaseClause();
+    read_token(";");
+    while (isValidIdentifier(v.at(vi)) || isValidChar(v.at(vi)) || isValidInteger(v.at(vi))) {
+        CaseClause();
+        read_token(";");
+    }
+}
 
-void Parser::Caseclause() {}
+void Parser::CaseClause() {
+    int n = 1;
+    CaseExpression();
+    while (v.at(vi) == ",") {
+        read_token(",");
+        CaseExpression();
+        n++;
+    }
+    read_token(":");
+    Statement();
+    build_tree("case_clause", n);
+}
 
-void Parser::CaseExpression() {}
+void Parser::CaseExpression() {
+    ConstValue();
+    if (v.at(vi) == "..") {
+        read_token("..");
+        ConstValue();
+        build_tree("..", 2);
+    }
+}
 
-void Parser::OtherwiseClause() {}
+void Parser::OtherwiseClause() {
+    if (v.at(vi) == "otherwise") {
+        read_token("otherwise");
+        Statement();
+        build_tree("otherwise", 1);
+    }
+}
 
 void Parser::Assignment() {
     Name();
@@ -561,9 +611,19 @@ void Parser::Assignment() {
     }
 }
 
-void Parser::ForStat() {}
+void Parser::ForStat() {
+    if (v.at(vi) == ";" || v.at(vi) == ")")
+        build_tree("<null>", 0);
+    else
+        Assignment();
+}
 
-void Parser::ForExp() {}
+void Parser::ForExp() {
+    if (v.at(vi) == ";")
+        build_tree("true", 0);
+    else
+        Expression();
+}
 
 void Parser::Expression() {
     Term();
@@ -786,15 +846,17 @@ bool isIdentifierChar(const char &c) {
 }
 
 bool isValidIdentifier(std::string s) {
-    if (isLetter(s.at(0)) || s.at(0) == '_') {
-        for (unsigned long i=1; i<s.length(); i++) {
-            if (!isIdentifierChar(s.at(i)))
-                return false;
+    if (!isKeyword(s)) {
+        if (isLetter(s.at(0)) || s.at(0) == '_') {
+            for (unsigned long i=1; i<s.length(); i++) {
+                if (!isIdentifierChar(s.at(i)))
+                    return false;
+            }
+            return true;
         }
-        return true;
+        else return false;
     }
-    else
-        return false;
+    else return false;
 }
 
 bool isValidChar(std::string s) {
@@ -838,6 +900,42 @@ bool isValidInteger(std::string s) {
             return false;
     }
     return true;
+}
+
+bool isKeyword(std::string s) {
+    return (s == "program" ||
+            s == "const" ||
+            s == "type" ||
+            s == "function" ||
+            s == "var" ||
+            s == "begin" ||
+            s == "end" ||
+            s == "output" ||
+            s == "if" ||
+            s == "then" ||
+            s == "else" ||
+            s == "while" ||
+            s == "do" ||
+            s == "repeat" ||
+            s == "until" ||
+            s == "for" ||
+            s == "loop" ||
+            s == "pool" ||
+            s == "case" ||
+            s == "of" ||
+            s == "read" ||
+            s == "exit" ||
+            s == "return" ||
+            s == "otherwise" ||
+            s == "and" ||
+            s == "mod" ||
+            s == "or" ||
+            s == "not" ||
+            s == "eof" ||
+            s == "succ" ||
+            s == "pred" ||
+            s == "chr" ||
+            s == "ord");
 }
 
 void printTree(int depth, Node *n) {
