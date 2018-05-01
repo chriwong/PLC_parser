@@ -545,6 +545,15 @@ void Parser::Statement() {
         Expression();
         build_tree("return", 1);
     }
+    else if (v.at(vi) == "begin") {
+        Body();
+    }
+    else if (isValidIdentifier(v.at(vi))) {
+        Assignment();
+    }
+    else {
+        build_tree("<null>", 0);
+    }
 }
 
 void Parser::OutExp() {
@@ -610,10 +619,12 @@ void Parser::OtherwiseClause() {
 void Parser::Assignment() {
     Name();
     if (v.at(vi) == ":=") {
+        read_token(":=");
         Expression();
         build_tree("assign", 2);
     }
     else if (v.at(vi) == ":=:") {
+        read_token(":=:");
         Name();
         build_tree("swap", 2);
     }
