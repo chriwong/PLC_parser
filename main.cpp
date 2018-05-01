@@ -52,6 +52,7 @@ struct Parser {
     void Fcn();
     void Params();
     void Dclns();
+    void Dcln();
     void Body();
     void Statement();
     void OutExp();
@@ -224,9 +225,12 @@ bool Parser::read_token(std::string s) {
     }
     else {
         if (v.at(vi) != s) {
+            std::cout << "Error reading " << s << std::endl;
             return false;
         } else {
             vi++;
+            std::cout << "Correctly read " << s << std::endl;
+            std::cout << " vi : " << vi << std::endl;
             return true;
         }
     }
@@ -279,9 +283,25 @@ void Parser::Const() {
 
 void Parser::ConstValue() {}
 
+/*
+ * I don't know how to code the regex + operator (one or more occurences)
+ * It should call Type() and read a semicolon at least one time, but the continuity case
+ *  should stop when
+ *      1) Next token after the semicolon is 'var' (which doesn't happen
+ *          all the time, so that won't work (though for this project it might) )
+ *      2) Next token is not an identifier (meaning it is one of the keywords)
+ *          I'm probably going to do this, but it's going to be super tedious typing every single keyword
+*/
 void Parser::Types() {
     if (v.at(vi) == "type") {
-        
+        int n = 0;
+        read_token("type");
+        do {
+            Type();
+            read_token(";");
+            n++;
+        } while (v.at(vi) != "var"); //TODO change to while(v.at(vi).isNotKeyword)
+        build_tree("types", n);
     }
     else {
         build_tree("types", 0);
@@ -296,26 +316,204 @@ void Parser::Type() {
 }
 
 void Parser::LitList() {
+    int n = 1;
     read_token("(");
     Name();
     while (v.at(vi) == ",") {
         read_token(",");
         Name();
+        n++;
     }
     read_token(")");
+    build_tree("lit", n);
 }
 
-void Parser::SubProgs() {}
+void Parser::SubProgs() {
+    int n = 0;
+    while (v.at(vi) == "function") {
+        Fcn();
+        n++;
+    }
+    build_tree("subprogs", n);
+}
 
-void Parser::Fcn() {}
+void Parser::Fcn() {
+    if (v.at(vi) == "function") {
+        read_token("function");
+        Name();
+        read_token("(");
+        Params();
+        read_token(")");
+        read_token(":");
+        Name();
+        read_token(";");
+        Consts();
+        Types();
+        Dclns();
+        Body();
+        Name();
+        read_token(";");
+    }
+    else {
+        std::cout << "Error in Fcn()" << std::endl;
+    }
+}
 
-void Parser::Params() {}
+void Parser::Params() {
+    int n = 1;
+    Dcln();
+    while (v.at(vi) == ";") {
+        Dcln();
+        n++;
+    }
+    build_tree("params", n);
+}
 
-void Parser::Dclns() {}
+void Parser::Dclns() {
+    if (v.at(vi) == "var") {
+        int n = 0;
+        read_token("var");
+        do {
+            Dcln();
+            read_token(";");
+            n++;
+        } while (v.at(vi) != "function" || v.at(vi) != "begin");
+        build_tree("dclns", n);
+    }
+    else {
+        build_tree("dclns", 0);
+    }
+}
 
-void Parser::Body() {}
+void Parser::Dcln() {
+    int n = 1;
+    Name();
+    while (v.at(vi) == ",") {
+        read_token(",");
+        Name();
+        n++;
+    }
+    read_token(":");
+    Name();
+    build_tree("var", 1+n);
+}
 
-void Parser::Statement() {}
+void Parser::Body() {
+    read_token("begin");
+    int n = 1;
+    Statement();
+    while (v.at(vi) == ";") {
+        read_token(";");
+        Statement();
+        n++;
+    }
+    read_token("end");
+    build_tree("block", n);
+}
+
+void Parser::Statement() {
+    if (v.at(vi) == "output") {
+        read_token("output");
+        read_token("(");
+        int n = 1;
+        OutExp();
+        while (v.at(vi) == ",") {
+            read_token(",");
+            OutExp();
+            n++;
+        }
+        read_token(")");
+        build_tree("output", n);
+    }
+    else if (v.at(vi) == "if") {
+        read_token("if");
+        Expression();
+        read_token("then");
+        Statement();
+        if (v.at(vi) == "else") {
+            read_token("else");
+            Statement();
+            build_tree("if", 3);
+        }
+        else
+            build_tree("if", 2);
+    }
+    else if (v.at(vi) == "while") {
+        read_token("while");
+        Expression();
+        read_token("do");
+        Statement();
+        build_tree("while", 2);
+    }
+    else if (v.at(vi) == "repeat") {
+        read_token("token");
+        int n = 1;
+        Statement();
+        while (v.at(vi) == ";") {
+            read_token(";");
+            Statement();
+            n++;
+        }
+        read_token("until");
+        Expression();
+        build_tree("repeat", 1+n);
+    }
+    else if (v.at(vi) == "for") {
+        read_token("for");
+        read_token("(");
+        ForStat();
+        read_token(";");
+        ForExp();
+        read_token(";");
+        ForStat();
+        read_token(")");
+        Statement();
+        build_tree("for", 4);
+    }
+    else if (v.at(vi) == "loop") {
+        read_token("loop");
+        int n = 1;
+        Statement();
+        while (v.at(vi) == ";") {
+            read_token(";");
+            Statement();
+            n++;
+        }
+        read_token("pool");
+        build_tree("loop", n);
+    }
+    else if (v.at(vi) == "case") {
+        read_token("case");
+        Expression();
+        read_token("of");
+        Caseclauses();
+        OtherwiseClause();
+        read_token("end");
+        build_tree("case", 3);
+    }
+    else if (v.at(vi) == "read") {
+        read_token("read");
+        read_token("(");
+        int n = 1;
+        Name();
+        while (v.at(vi) == ",") {
+            read_token(",");
+            Name();
+            n++;
+        }
+        read_token(")");
+        build_tree("read", n);
+    }
+    else if (v.at(vi) == "exit") {
+        read_token("exit");
+        build_tree("exit", 0);
+    }
+    else if (v.at(vi) == "return") {
+        read_token("return");
+        Expression();
+        build_tree("return", 1);
+    }
+}
 
 void Parser::OutExp() {}
 
