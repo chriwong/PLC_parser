@@ -481,7 +481,7 @@ void Parser::Statement() {
         build_tree("while", 2);
     }
     else if (v.at(vi) == "repeat") {
-        read_token("token");
+        read_token("repeat");
         int n = 1;
         Statement();
         while (v.at(vi) == ";") {
@@ -834,15 +834,15 @@ int main(int argc, char const* argv[]) {
 
             parser.tokenize(argv[2]);
 
-//            std::ofstream ot("output.txt");
-//
-//            for (unsigned long i=0; i<parser.v.size(); i++)
-//                ot << parser.v.at(i) << "\n";
-//            ot.close();
+            std::ofstream ot("output.txt");
+
+            for (unsigned long i=0; i<parser.v.size(); i++)
+                ot << parser.v.at(i) << "\n";
+            ot.close();
 
             parser.parse();
 
-//            std::cout << "\n\n\tprintTree()" << std::endl;
+            std::cout << "\n\n\tprintTree()" << std::endl;
             printTree(0, parser.root);
 
         }
