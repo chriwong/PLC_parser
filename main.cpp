@@ -383,6 +383,7 @@ void Parser::Fcn() {
         Body();
         Name();
         read_token(";");
+        build_tree("fcn", 8);
     }
     else {
         std::cout << "Error in Fcn()" << std::endl;
@@ -442,7 +443,6 @@ void Parser::Body() {
     build_tree("block", n);
 }
 
-//TODO null case and distinguish between Assignment() and Body()
 void Parser::Statement() {
     if (v.at(vi) == "output") {
         read_token("output");
@@ -793,7 +793,7 @@ void Parser::Primary() {
                 n++;
             }
             read_token(")");
-            build_tree("call", n);
+            build_tree("call", 1+n);
         }
     }
     else {
@@ -839,7 +839,8 @@ int main(int argc, char const* argv[]) {
 
             parser.parse();
 
-//            printTree(0, parser.root);
+            std::cout << "\n\n\tprintTree()" << std::endl;
+            printTree(0, parser.root);
 
         }
         else {
