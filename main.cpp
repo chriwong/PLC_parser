@@ -37,7 +37,7 @@ void printTree(int depth, Node *n) {
             std::cout << ". ";
         std::cout << n->token << "(" << x << ")" << std::endl;
         printTree(depth+1, n->left);
-        printTree(depth+1, n->right);
+        printTree(depth, n->right);
     }
 }
 
@@ -123,10 +123,10 @@ void Parser::tokenize(const char* filepath) {
                         v.push_back(s);
                     }
                     else
-                        printf("Error Char token - expected ending quote but received %c", f.get());
+//                        printf("Error Char token - expected ending quote but received %c", f.get());
                 }
                 else
-                    printf("Error Char token - expected non-quote but received %c", f.get());
+//                    printf("Error Char token - expected non-quote but received %c", f.get());
             }
 
                 // Strings are double quote -> any number of any other characters -> double quote
@@ -137,7 +137,7 @@ void Parser::tokenize(const char* filepath) {
                     s.push_back((char)f.get());
 
                 if (f.peek() != '\"')
-                    printf("Error String token - no closing quotes");
+//                    printf("Error String token - no closing quotes");
                 else {
                     s.push_back((char)f.get());
                     v.push_back(s);
@@ -231,18 +231,18 @@ void Parser::build_tree(std::string s, int n) {
 /* Has to have a special, generic case for identifiers... */
 bool Parser::read_token(std::string s) {
     if (s == "<identifier>") {
-        std::cout << "Read <identifier>: " << v.at(vi) << std::endl;
-        std::cout << " vi : " << vi << std::endl;
+//        std::cout << "Read <identifier>: " << v.at(vi) << std::endl;
+//        std::cout << " vi : " << vi << std::endl;
         vi++;
         return true;
     }
     else {
         if (v.at(vi) != s) {
-            std::cout << "Error reading " << s << " at vi: " << vi << std::endl;
+//            std::cout << "Error reading " << s << " at vi: " << vi << std::endl;
             return false;
         } else {
-            std::cout << "Correctly read " << s << std::endl;
-            std::cout << " vi : " << vi << std::endl;
+//            std::cout << "Correctly read " << s << std::endl;
+//            std::cout << " vi : " << vi << std::endl;
             vi++;
             return true;
         }
@@ -265,7 +265,7 @@ void Parser::Tiny() {
         build_tree("program", 7);
     }
     else {
-        std::cout << "Error in Tiny()" << std::endl;
+//        std::cout << "Error in Tiny()" << std::endl;
     }
 }
 
@@ -309,7 +309,7 @@ void Parser::ConstValue() {
         Name();
     }
     else {
-        std::cout << "Error in ConstValue()" << std::endl;
+//        std::cout << "Error in ConstValue()" << std::endl;
     }
 }
 
@@ -386,7 +386,7 @@ void Parser::Fcn() {
         build_tree("fcn", 8);
     }
     else {
-        std::cout << "Error in Fcn()" << std::endl;
+//        std::cout << "Error in Fcn()" << std::endl;
     }
 }
 
@@ -573,7 +573,7 @@ void Parser::StringNode() {
         read_token("<identifier>");
     }
     else {
-        std::cout << "Error in StringNode()" << std::endl;
+//        std::cout << "Error in StringNode()" << std::endl;
     }
 }
 
@@ -629,7 +629,7 @@ void Parser::Assignment() {
         build_tree("swap", 2);
     }
     else {
-        std::cout << "Error in Assignment()" << std::endl;
+//        std::cout << "Error in Assignment()" << std::endl;
     }
 }
 
@@ -797,7 +797,7 @@ void Parser::Primary() {
         }
     }
     else {
-        std::cout << "Error in Primary()" << std::endl;
+//        std::cout << "Error in Primary()" << std::endl;
     }
 }
 
@@ -808,7 +808,7 @@ void Parser::Name() {
         build_tree("<identifier>", 1);
     }
     else {
-        std::cout << "Error in Name()" << std::endl;
+//        std::cout << "Error in Name()" << std::endl;
     }
 }
 
@@ -831,15 +831,15 @@ int main(int argc, char const* argv[]) {
 
             parser.tokenize(argv[2]);
 
-            std::ofstream ot("output.txt");
-
-            for (unsigned long i=0; i<parser.v.size(); i++)
-                ot << parser.v.at(i) << "\n";
-            ot.close();
+//            std::ofstream ot("output.txt");
+//
+//            for (unsigned long i=0; i<parser.v.size(); i++)
+//                ot << parser.v.at(i) << "\n";
+//            ot.close();
 
             parser.parse();
 
-            std::cout << "\n\n\tprintTree()" << std::endl;
+//            std::cout << "\n\n\tprintTree()" << std::endl;
             printTree(0, parser.root);
 
         }
@@ -919,7 +919,7 @@ bool isValidString(std::string s) {
 }
 
 bool isValidInteger(std::string s) {
-    for (int i=0; i<s.length(); i++) {
+    for (unsigned long i=0; i<s.length(); i++) {
         if (s.at(i) < '0' || s.at(i) > '9')
             return false;
     }
