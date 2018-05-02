@@ -122,11 +122,13 @@ void Parser::tokenize(const char* filepath) {
                         s.push_back((char)f.get());
                         v.push_back(s);
                     }
-                    else
+                    else {
 //                        printf("Error Char token - expected ending quote but received %c", f.get());
+                    }
                 }
-                else
+                else {
 //                    printf("Error Char token - expected non-quote but received %c", f.get());
+                }
             }
 
                 // Strings are double quote -> any number of any other characters -> double quote
@@ -136,8 +138,9 @@ void Parser::tokenize(const char* filepath) {
                 while (f.peek() != '\"')
                     s.push_back((char)f.get());
 
-                if (f.peek() != '\"')
+                if (f.peek() != '\"') {
 //                    printf("Error String token - no closing quotes");
+                }
                 else {
                     s.push_back((char)f.get());
                     v.push_back(s);
